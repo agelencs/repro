@@ -37,7 +37,7 @@ public class Repro {
 
         
         int rolling_winsize = 30;
-        int size_small_dataset = 90000;
+        int size_small_dataset = 180000;
         int temp_data_list_size = 50;
         int perm_data_list_size = 200;
         int r = 4; //number of row for the matrix
@@ -48,15 +48,16 @@ public class Repro {
         //J48 new_tree;
         int c_tree = 0;
         int n_tree = 0;
-        double [][]results = new double[90000][3];
-        double [] results_short = new double[9000];
+        double [][]results = new double[size_small_dataset][3];
+        double [] results_short = new double[size_small_dataset/10];
         int acc_counter=0;
         int counter_sec=0;
+        boolean prediction_ON_OFF = false;
         //setting up the path to the datafile
         //DataSource source = new DataSource("E:/PhD/data/SEA/comb.arff");
         
         
-        DataSource source = new DataSource("E:/PhD/data/SEA/own_sea_3c_rep.arff");
+        DataSource source = new DataSource("E:/PhD/data/SEA/own_sea_3c_rep_long.arff");
         Instances dataset = source.getDataSet();
         dataset.setClassIndex(dataset.numAttributes()-1);
         
@@ -154,18 +155,27 @@ public class Repro {
                     //c_tree=m;
                     //current_tree = J48trees_perm.get(c_tree-1);
                     //m=0;
-                    //drift = false;
+                    
                     System.out.println("count:"+count+" predicted tree#: "+m);
                     //counter_sec=count;
                     counter_sec=count;
+                    
+                    current_tree = J48trees_perm.get(m-1);
+                    prediction_ON_OFF = true;
+                    //c_tree=m;
+                    
+                    
+                    
+                    
+                    
                 }
               
             }
               
               
-            if(temp_data_list.size() < temp_data_list_size) 
+            if(temp_data_list.size() < temp_data_list_size && prediction_ON_OFF == false) 
                 {temp_data_list.add(data);} //build up the temportary data store
-            else if (temp_data_list.size() == temp_data_list_size) 
+            else if (temp_data_list.size() == temp_data_list_size && prediction_ON_OFF == false) 
                     {
                         //select the relevant data
                         Instances traindata = new Instances(dataset,count-temp_data_list_size,temp_data_list_size);
@@ -176,7 +186,7 @@ public class Repro {
                         current_tree =tree;
                         J48trees_temp.add(tree); //store built model
                         temp_data_list.clear();  //delete data   
-                        System.out.println("count:" + count +" temprary tree used tree#:"+J48trees_temp.size());
+                        System.out.println("count:" + count +" temporary tree used tree#:"+J48trees_temp.size());
                     }
             
             if(perm_data_list.size() < perm_data_list_size) 
@@ -234,6 +244,7 @@ public class Repro {
                             
                             matrix[c_tree][n_tree]++;
                             c_tree = n_tree;
+                            prediction_ON_OFF = false;
                             
                         }
                         else if (similar_trees.size()==1) //exisiting one tree
@@ -244,15 +255,17 @@ public class Repro {
                                     + "similar tree stored.  prev tree#:" + c_tree + " new tree#:"+n_tree);
                             
                             c_tree=n_tree;
+                            prediction_ON_OFF = false;
                         }
                         else if (similar_trees.size()>1) //multiple similar trees; use the more accurate one
                         {                                                      
                             current_tree = J48trees_perm.get(n_tree-1);
                             matrix[c_tree][n_tree]++;
                             System.out.println("count:" + count +" no tree added because there was already "
-                                    + "similar tree stored.  prev tree#:" + c_tree + " new tree#:"+n_tree);
+                                    + "similar trees stored.  prev tree#:" + c_tree + " new tree#:"+n_tree);
                             
-                            c_tree=n_tree;                           
+                            c_tree=n_tree; 
+                            prediction_ON_OFF = false;
                             
                         }
                         
