@@ -36,7 +36,7 @@ public class Repro {
  */
 
         
-        int rolling_winsize = 40;
+        int rolling_winsize = 30;
         int size_small_dataset = 90000;
         int temp_data_list_size = 50;
         int perm_data_list_size = 200;
@@ -45,7 +45,7 @@ public class Repro {
         int[][] matrix = new int[r][c]; //initialise the matrix
         J48 tree;
         J48 current_tree = new J48();
-        J48 new_tree;
+        //J48 new_tree;
         int c_tree = 0;
         int n_tree = 0;
         double [][]results = new double[90000][3];
