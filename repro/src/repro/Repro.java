@@ -110,7 +110,7 @@ public class Repro {
              ddetect.AddPred_currentModel(pred);
               
             
-            if (pred==gt_label) correctly_classified++;
+            if (pred==gt_label) {correctly_classified++;}
               
             prequential_accuracy = ((double)correctly_classified/acc_counter)*100;
             
