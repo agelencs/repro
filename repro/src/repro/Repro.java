@@ -36,7 +36,7 @@ public class Repro {
  */
 
         
-        int rolling_winsize = 10;
+        int rolling_winsize = 40;
         int size_small_dataset = 90000;
         int temp_data_list_size = 50;
         int perm_data_list_size = 200;
@@ -101,18 +101,18 @@ public class Repro {
           if(J48trees_perm.isEmpty() && J48trees_temp.isEmpty())
           {
           ddetect.AddPred_currentModel(pred_cur_dataset.instance(count).value(pred_cur_dataset.numAttributes()-1));
-          //wSystem.out.println("count:"+count);
+          
           }
           else
           {
             double pred = current_tree.classifyInstance(data);
             
              ddetect.AddPred_currentModel(pred);
-              
+             //System.out.println(ddetect.getAccuracy()); 
             
             if (pred==gt_label) {correctly_classified++;}
               
-            prequential_accuracy = ((double)correctly_classified/acc_counter)*100;
+            prequential_accuracy = (ddetect.getAccuracy());//(double)correctly_classified/acc_counter)*100;
             
             results[count][0] = gt_label;
             results[count][1] = pred;
