@@ -118,7 +118,7 @@ public class Repro {
                 }
                 else
                 {
-                    length_of_concept = count - oldcount;
+                    length_of_concept = count - oldcount-(int)(rolling_winsize*0.6);
                     oldcount=count;
                     int l=matrix_nonempty_length(concept_lengths, c_tree-1, -1);
                     concept_lengths[c_tree-1][l]=length_of_concept;
@@ -148,7 +148,7 @@ public class Repro {
                     //System.out.println("count:"+count+" predicted tree#: "+predicted_concept);   
                     
                     System.out.println("count:" + count +" observed length for previous tree'('#"+c_tree+"')'"+length_of_concept);
-                    System.out.println("count:" + count +" next predicted concept is "+predicted_concept+ " with predicted length " +length_prediction(concept_lengths,c_tree) );
+                    System.out.println("count:" + count +" next predicted concept is "+predicted_concept+ " with predicted length " +length_prediction(concept_lengths,predicted_concept) );
                     
                     counter_sec=count;                    
                     current_tree = J48trees_perm.get(predicted_concept-1);
