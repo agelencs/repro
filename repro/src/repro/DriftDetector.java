@@ -18,16 +18,16 @@ public class DriftDetector {
     private final RollingWindow<Double> PredAcc_nextmodel;
     private final RollingWindow<Double> gt_labels;
     private final RollingWindow<Instance> instance;
-    private int win_size;
+    private final int win_size;
     private double drift_threshold = 0.6;
     private double drift_measure;
     
     public DriftDetector(int size)
     {
-        gt_labels = new RollingWindow<Double>(size);        
-        PredAcc_currentmodel = new RollingWindow<Double>(size);    
-        PredAcc_nextmodel = new RollingWindow<Double>(size);   
-        instance = new RollingWindow<Instance>(size);
+        gt_labels = new RollingWindow<>(size);        
+        PredAcc_currentmodel = new RollingWindow<>(size);    
+        PredAcc_nextmodel = new RollingWindow<>(size);   
+        instance = new RollingWindow<>(size);
         win_size = size;
     }
         
@@ -129,12 +129,8 @@ public class DriftDetector {
             }
             
             //determine accuracy based on the above adn winsize
-            acc = (counter/(double)win_size)*100 ;
-                    
+            acc = (counter/(double)win_size)*100 ;                    
         }
-        
-        
-        
         return acc;
     }
  }
