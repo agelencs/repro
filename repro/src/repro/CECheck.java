@@ -18,7 +18,7 @@ import weka.core.Instances;
  */
 public class CECheck {
     
-    private double equivalence_threshold = 0.7;
+    private double equivalence_threshold = 0.8;
     private Instances dataset;
     Evaluation eval;
     
@@ -43,23 +43,14 @@ public class CECheck {
             if (r1!=r2 && r1!=l1 && r2!=l1) s=0;//do nothing or increase s with 0}
             if (r1!=r2 && (r1==l1 || r2==l1))    s=-1;
             sum = sum+s;            
-        }
+        }       
         
-        //System.out.println("counter "+sum);
         double acc = (sum/(double)dataset.numInstances());
         if(acc > equivalence_threshold) 
         {
-            result = acc;
-           //System.out.println("acc "+(sum/(double)dataset.numInstances()));
-        }
-        //if (acc == 1) result = 99;
-         //System.out.println(result);
-        //System.out.println(result);
+            result = acc;           
+        }        
         return result;
        
     }
-    
-     
-    
-    
 }
