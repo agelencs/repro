@@ -30,7 +30,8 @@ public class Repro {
         J48 current_tree = new J48();
         //J48 new_tree;
         int current_tree_number = 0;
-        int next_tree_number = 0;
+        int next_tree_number = -1;
+        int previous_tree_number = 0;
         int oldcount = 0;
         double[][] results = new double[size_small_dataset][3];
         double[] results_short = new double[size_small_dataset / 10];
@@ -58,7 +59,9 @@ public class Repro {
         int count = 0;
         boolean drift = false;
         int correctly_classified = 0;
-        double prequential_accuracy;
+        int correctly_classified_old = 0;
+        double prequential_accuracy=0;
+        double prequential_accuracy_old=0;
         int pos = 0;
         int length_of_concept = 0;
         int predicted_concept_number = -1;
@@ -79,10 +82,21 @@ public class Repro {
             } else {
                 double pred = current_tree.classifyInstance(data);
                 ddetect.AddPred_currentModel(pred);
+                if (next_tree_number>-1)
+                {
+                    double n_pred=J48trees_perm.get(previous_tree_number).classifyInstance(data);
+                    ddetect.AddPred_nextModel(n_pred);
+                            
+                    if (pred == gt_label) {
+                    correctly_classified_old++;
+                    }                      
+                }
+                
                 if (pred == gt_label) {
                     correctly_classified++;
                 }
-                prequential_accuracy = (ddetect.getAccuracy());//(double)correctly_classified/acc_counter)*100;
+                prequential_accuracy = ddetect.getAccuracy();//(double)correctly_classified/acc_counter)*100;
+                prequential_accuracy_old = ddetect.getAccuracy_predicted();
                 results[count][0] = gt_label;
                 results[count][1] = pred;
                 results[count][2] = prequential_accuracy;
@@ -94,8 +108,8 @@ public class Repro {
             }
             ///////////////////////////////////////
             //this is to change concept because predicted to change from now onwards...
-            if (count == prediction_counter) {
-                next_tree_number = concept_prediction(matrix, current_tree_number);
+            if (count == prediction_counter) {                
+                next_tree_number = concept_prediction(matrix, current_tree_number);                
                 if(next_tree_number==-1){next_tree_number=current_tree_number+1;}
                 matrix[current_tree_number][next_tree_number]++;
                 double p_length = length_prediction(concept_lengths, next_tree_number);
@@ -106,8 +120,10 @@ public class Repro {
                 current_tree = J48trees_perm.get(next_tree_number);
                 prediction_ON_OFF = true;   
                 counter_sec = count;
-                               
+                
+                previous_tree_number = current_tree_number;               
                 current_tree_number = next_tree_number;
+                
                 length_of_concept = count - oldcount;// - (int) (rolling_winsize * 0.6);
                 oldcount = count;
                 int l = matrix_nonempty_length(concept_lengths, next_tree_number, -1);
@@ -132,8 +148,28 @@ public class Repro {
                 }
             }
             
-            if (drift) {
-                               
+            if (prediction_ON_OFF==true)
+                {
+                    if(prequential_accuracy_old>prequential_accuracy)
+                    {                       
+                        current_tree = J48trees_perm.get(previous_tree_number); 
+                        //System.out.println(count+" changed to  pold...");
+                    }   else {   
+                        current_tree = J48trees_perm.get(current_tree_number);                        
+                    }
+                }
+            
+            
+            if (drift) { 
+                /*if (prediction_ON_OFF==true)
+                {
+                    if(prequential_accuracy_old>prequential_accuracy)
+                    {                       
+                        current_tree = J48trees_perm.get(previous_tree_number);                       
+                    }   else {   
+                        current_tree = J48trees_perm.get(current_tree_number);                        
+                    }
+                }*/
                 
                 if(matrix_nonempty_length(concept_lengths, current_tree_number,-1)>2 && prediction_ON_OFF==false)
                 {                    
@@ -197,12 +233,14 @@ public class Repro {
                     {//if it could not find any similar trees
                         J48trees_perm.add(tree);
                         next_tree_number = concept_prediction(matrix,current_tree_number);
+                        
                         if(next_tree_number==-1){next_tree_number=current_tree_number+1;}
                         //next_tree_number = J48trees_perm.size();
                         current_tree = tree;
                         System.out.println("count:" + count + " new tree added because there "
                                 + "was not any other similar already stored.  prev tree#:" + current_tree_number + " new tree#:" + next_tree_number);
                         matrix[current_tree_number][next_tree_number]++;
+                        previous_tree_number = current_tree_number;
                         current_tree_number = next_tree_number;
                         prediction_ON_OFF = false;
                     } else if (similar_trees.size() == 1 && next_tree_number != current_tree_number ) //exisiting one tree
@@ -211,6 +249,7 @@ public class Repro {
                         matrix[current_tree_number][next_tree_number]++;
                         System.out.println("count:" + count + " enough data collected. No new tree added because similar tree found "
                                 + "in store.  tree#: " + next_tree_number);
+                        previous_tree_number = current_tree_number;
                         current_tree_number = next_tree_number;
                         
                         //if (prediction_ON_OFF == false)prediction_counter=0;
@@ -222,6 +261,7 @@ public class Repro {
                         matrix[current_tree_number][next_tree_number]++;
                         System.out.println("count:" + count + " no tree added because there was already "
                                 + "similar trees stored.  prev tree#:" + current_tree_number + " new tree#:" + next_tree_number);
+                        previous_tree_number = current_tree_number;
                         current_tree_number = next_tree_number;
                         prediction_ON_OFF = false;
                     }
