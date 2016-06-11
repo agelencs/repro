@@ -19,7 +19,7 @@ public class DriftDetector {
     private final RollingWindow<Double> gt_labels;
     private final RollingWindow<Instance> instance;
     private final int win_size;
-    private double drift_threshold = 0.6;
+    private double drift_threshold = 0.4;
     private double drift_measure;
     
     public DriftDetector(int size)
@@ -67,7 +67,7 @@ public class DriftDetector {
         return drift;
     }
     
-    public void AddLabel(double label)
+    public void Add_GT_Label(double label)
     {
         gt_labels.add(label);
     }

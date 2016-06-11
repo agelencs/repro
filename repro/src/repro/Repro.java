@@ -18,11 +18,11 @@ public class Repro {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws Exception {
-        int rolling_winsize = 30;
+        int rolling_winsize = 20;
         int size_small_dataset = 180000;
-        int temp_data_list_size = 50;
-        int perm_data_list_size = 200;
-        int r = 4; //number of row for the matrix
+        int temp_data_list_size = 1000;
+        int perm_data_list_size = 4000;
+        int r = 10; //number of row for the matrix
         int c = r; // number of columns for the matrix
         int[][] matrix = new int[r][c]; //initialise the matrix, which holds the transitions from concept to concept
         int[][] concept_lengths = new int[r][r * 2]; //matrix to hold the length of observations for each model
@@ -63,16 +63,19 @@ public class Repro {
         int length_of_concept = 0;
         int predicted_concept_number = -1;
         double sum_accuracy = 0;
-        //read new data in one by one
+        //read new data in one by one                       
         do {
             Instance data = small_dataset.instance(count);
             //add data and label to drift detection
             double gt_label = data.value(data.numAttributes() - 1);
-            ddetect.AddLabel(gt_label);
+            ddetect.Add_GT_Label(gt_label);
+           // System.out.println(count);
             //////////////////////////////////////            
             //predict, get gt label and calculate accuracy
-            if (J48trees_perm.isEmpty() && J48trees_temp.isEmpty()) { //give rnd results at the beginning
-                ddetect.AddPred_currentModel(pred_cur_dataset.instance(count).value(pred_cur_dataset.numAttributes() - 1));
+            if (J48trees_perm.isEmpty() && J48trees_temp.isEmpty()) { //give rnd results at the beginning                
+            double rand = Math.round(Math.random() * 1);            
+            //ddetect.AddPred_currentModel(pred_cur_dataset.instance(count).value(pred_cur_dataset.numAttributes() - 1));
+            ddetect.AddPred_currentModel(rand);  
             } else {
                 double pred = current_tree.classifyInstance(data);
                 ddetect.AddPred_currentModel(pred);
@@ -105,7 +108,7 @@ public class Repro {
                 counter_sec = count;
                                
                 current_tree_number = next_tree_number;
-                length_of_concept = count - oldcount - (int) (rolling_winsize * 0.6);
+                length_of_concept = count - oldcount;// - (int) (rolling_winsize * 0.6);
                 oldcount = count;
                 int l = matrix_nonempty_length(concept_lengths, next_tree_number, -1);
                 concept_lengths[current_tree_number][l] = length_of_concept;                 
@@ -121,7 +124,7 @@ public class Repro {
                     if (oldcount == 0) {
                         oldcount = count;
                     } else {
-                        length_of_concept = count - oldcount - (int) (rolling_winsize * 0.5);
+                        length_of_concept = count - oldcount - (int) (rolling_winsize * 0.6);
                         oldcount = count;
                         int l = matrix_nonempty_length(concept_lengths, current_tree_number , -1);
                         concept_lengths[current_tree_number][l] = length_of_concept;                         
@@ -130,6 +133,8 @@ public class Repro {
             }
             
             if (drift) {
+                               
+                
                 if(matrix_nonempty_length(concept_lengths, current_tree_number,-1)>2 && prediction_ON_OFF==false)
                 {                    
                   double p_length = length_prediction(concept_lengths, current_tree_number);
