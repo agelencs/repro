@@ -133,7 +133,7 @@ public class Repro {
                 if (p_length > 0) {
                     int t= count % 10000;
                     
-                    prediction_counter = count - t+10000;//(int) (count + p_length);
+                    prediction_counter = (int) (count + p_length);
                 }
             }
             ///////////////////////////////////////
@@ -178,7 +178,7 @@ public class Repro {
                   if (p_length > 0) {
                             int t= count % 10000;
                     
-                    prediction_counter = count - t+10000;//(int) (count + p_length);
+                    prediction_counter = (int) (count + p_length);
                         }
                   prediction_ON_OFF = true;                  
                 }               
