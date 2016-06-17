@@ -160,12 +160,12 @@ public class Repro {
             
             if (prediction_ON_OFF==true)
                 {
-                    if(prequential_accuracy_old>prequential_accuracy) // this is for when the new predicted model accuracy is not good enoguh amybe because it switched too early then it switches back to the original model.
+                    /*if(prequential_accuracy_old>prequential_accuracy) // this is for when the new predicted model accuracy is not good enoguh amybe because it switched too early then it switches back to the original model.
                     {                       
                         current_tree = J48trees_perm.get(previous_tree_number);                         
                     }   else {   
                         current_tree = J48trees_perm.get(current_tree_number);                        
-                    }
+                    }*/
                 }
             if (drift) {  
                 if(count>10000)
