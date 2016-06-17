@@ -1,4 +1,4 @@
-package repro;
+package repro; 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -21,6 +21,7 @@ public class Repro {
         int rolling_winsize = 20;
         int size_small_dataset = 180000;
         int temp_data_list_size = 1000;
+        
         int perm_data_list_size = 4000;
         int r = 10; //number of row for the matrix
         int c = r; // number of columns for the matrix
@@ -37,6 +38,7 @@ public class Repro {
         double[] results_short = new double[size_small_dataset / 10];
         int acc_counter = 0;
         int counter_sec = 0;
+        int counter_third = 0;
         boolean prediction_ON_OFF = false;
         int prediction_counter = -1;
         //setting up the path to the datafile
@@ -124,12 +126,14 @@ public class Repro {
                 previous_tree_number = current_tree_number;               
                 current_tree_number = next_tree_number;
                 
-                length_of_concept = count - oldcount;// - (int) (rolling_winsize * 0.6);
+                length_of_concept = count - oldcount- (int) (rolling_winsize * 1);
                 oldcount = count;
                 int l = matrix_nonempty_length(concept_lengths, next_tree_number, -1);
                 concept_lengths[current_tree_number][l] = length_of_concept;                 
                 if (p_length > 0) {
-                    prediction_counter = (int) (count + p_length);
+                    int t= count % 10000;
+                    
+                    prediction_counter = count - t+10000;//(int) (count + p_length);
                 }
             }
             ///////////////////////////////////////
@@ -140,46 +144,58 @@ public class Repro {
                     if (oldcount == 0) {
                         oldcount = count;
                     } else {
-                        length_of_concept = count - oldcount - (int) (rolling_winsize * 0.6);
+                        length_of_concept = count - oldcount + (int) (rolling_winsize * 1);
                         oldcount = count;
                         int l = matrix_nonempty_length(concept_lengths, current_tree_number , -1);
                         concept_lengths[current_tree_number][l] = length_of_concept;                         
                     }
                 }
-            }
+            }            
+           ////
+            //below has to be ON for predictive mode
+            ///
+            ///
+            //
+            
             
             if (prediction_ON_OFF==true)
                 {
-                    if(prequential_accuracy_old>prequential_accuracy)
+                    if(prequential_accuracy_old>prequential_accuracy) // this is for when the new predicted model accuracy is not good enoguh amybe because it switched too early then it switches back to the original model.
                     {                       
-                        current_tree = J48trees_perm.get(previous_tree_number); 
-                        //System.out.println(count+" changed to  pold...");
+                        current_tree = J48trees_perm.get(previous_tree_number);                         
                     }   else {   
                         current_tree = J48trees_perm.get(current_tree_number);                        
                     }
                 }
-            
-            
-            if (drift) { 
-                /*if (prediction_ON_OFF==true)
+            if (drift) {  
+                if(count>10000)
                 {
-                    if(prequential_accuracy_old>prequential_accuracy)
-                    {                       
-                        current_tree = J48trees_perm.get(previous_tree_number);                       
-                    }   else {   
-                        current_tree = J48trees_perm.get(current_tree_number);                        
-                    }
-                }*/
-                
+                    System.out.print("");
+                }
                 if(matrix_nonempty_length(concept_lengths, current_tree_number,-1)>2 && prediction_ON_OFF==false)
                 {                    
                   double p_length = length_prediction(concept_lengths, current_tree_number);
                   if (p_length > 0) {
-                            prediction_counter = (int) (count + p_length);
+                            int t= count % 10000;
+                    
+                    prediction_counter = count - t+10000;//(int) (count + p_length);
                         }
                   prediction_ON_OFF = true;                  
                 }               
-                
+                /*if(concept_prediction(matrix,current_tree_number)>0 && counter_third==count)
+                {
+                    next_tree_number = concept_prediction(matrix,current_tree_number);    
+                    current_tree = J48trees_perm.get(next_tree_number );
+                        matrix[current_tree_number][next_tree_number]++;
+                        System.out.println("count:" + count + " changed the next predicted as there as a drift "
+                                + " tree#: " + next_tree_number);
+                        previous_tree_number = current_tree_number;
+                        current_tree_number = next_tree_number;
+                     
+                        //prediction_ON_OFF = true;
+                        System.out.println("");
+                        counter_third = count + rolling_winsize*70;
+                }*/
                 if (temp_data_list.size() < temp_data_list_size && prediction_ON_OFF == false ) {
                     temp_data_list.add(data);
                 } //build up the temportary data store
@@ -194,7 +210,11 @@ public class Repro {
                     temp_data_list.clear();  //delete data   
                     System.out.println("count:" + count + " temporary tree used tree#:" + J48trees_temp.size());
                 }
-                if (perm_data_list.size() < perm_data_list_size) {
+                /////////////////////////********************
+                //below the && prediction_ON_OFF == false ) is only has to be there when in normal repro mode and NOT in prediction mode
+                
+                //////////////////////
+                if (perm_data_list.size() < perm_data_list_size ) {
                     perm_data_list.add(data);
                 } //build up the permamnent data store for the training 
                 else if (perm_data_list.size() == perm_data_list_size) {
@@ -204,7 +224,7 @@ public class Repro {
                     //int[] similar_trees = new int[J48trees_perm.size()];
                     ArrayList<Double> similar_trees = new ArrayList<>();
                     boolean first = false;
-                    //build model
+                    //build model 
                     tree = new J48();
                     tree.buildClassifier(traindata);
                     double t_max = 0;
@@ -271,6 +291,10 @@ public class Repro {
             }
             acc_counter++;
             count++;
+            if ((counter_third-count)<5)
+            {
+                counter_third=count;
+            }
         } while (count < (small_dataset.numInstances() - 1));
         display_matrix(matrix);
         display_matrix(concept_lengths);
@@ -306,7 +330,7 @@ public class Repro {
     public static int matrix_nonempty_length(int[][] m, int row, int column) {
         int length = 0;
         if (column == -1) {
-            for (int i = 0; i < m.length + 1; i++) {
+            for (int i = 0; i < m.length ; i++) {
                 if (m[row][i] != 0) {
                     length++;
                 }
